@@ -160,6 +160,8 @@ class TempCommand(Command):
 		pass
 
 	def trig_temp(self, bot, source, target, trigger, argument):
+		""" Usage: .temp [City] Uses data from temperature.nu, please direct all complaints to www.temperatur.nu """
+		argument = argument.strip()
 		if argument:
 			argument = argument.strip()
 			self.places[source] = argument
@@ -189,10 +191,10 @@ class TempCommand(Command):
 			data = response["data"]
 			m = _get_temp_re.match(data)
 
-		if m:
+		if m and m.group(1) != "not found":
 			return "Temperature in %s: %s." % (argument_text, m.group(1))
 		else:
-			return "Temperature in %s: invalid place" % (argument_text)
+			return "Temperature in %s: invalid place, try using .yr instead." % (argument_text)
 
 	def save(self): 
 		f = open(os.path.join("data", "places.txt"), "w") 
@@ -282,8 +284,8 @@ class GoogleCommand(Command):
 			return url
 
 class WikipediaCommand(Command):
-	def wp_get(self, item):
-		url = "http://simple.wikipedia.org/wiki/%s" % utility.escape(item.replace(" ", "_"))
+	def wp_get(self, language, item):
+		url = "http://%s.wikipedia.org/wiki/%s" % (language, utility.escape(item.replace(" ", "_")))
 
 		response = utility.read_url(url)
 
@@ -322,12 +324,13 @@ class WikipediaCommand(Command):
 		return (url, data)
 
 	def trig_wp(self, bot, source, target, trigger, argument):
-		url, data = self.wp_get(argument)
-
-		if data:
-			return "%s - %s" % (data, url)
-		else:
-			return "I couldn't find an article... :("
+		languages = ["simple", "en", "sv"]
+		for language in languages:
+			url, data = self.wp_get(language, argument)
+			if data:
+				return "%s - %s" % (data, url)
+	
+		return "I couldn't find an article... :("
 
 class AAOCommand(Command):
 	triggers = ['}{|', 'åäö', 'Ã¥Ã¤Ã¶']
